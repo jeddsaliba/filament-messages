@@ -2,6 +2,12 @@
 
 **Filament Messages** is a powerful messaging plugin for [FilamentPHP](https://filamentphp.com/). It provides an easy-to-use interface for real-time messaging within Filament admin panels.
 
+![screen-1](resources/images/screen-1.png)
+<p align="center">
+  <img src="resources/images/screen-2.png" width="49.7%" />
+  <img src="resources/images/screen-3.png" width="49.7%" />
+</p>
+
 ![GitHub stars](https://img.shields.io/github/stars/jeddsaliba/filament-messages?style=flat-square)
 ![GitHub issues](https://img.shields.io/github/issues/jeddsaliba/filament-messages?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
