@@ -27,13 +27,29 @@ class Inbox extends Component implements HasActions, HasForms
 
     public $selectedConversation;
 
+    /**
+     * Initialize the component.
+     *
+     * This method is called when the component is mounted,
+     * and is used to set the poll interval and load the conversations.
+     *
+     * @return void
+     */
     public function mount(): void
     {
         $this->setPollInterval();
         $this->loadConversations();
     }
 
-    public function unreadCount()
+    /**
+     * Get the count of unread messages for the authenticated user.
+     *
+     * This method queries the Inbox model to find conversations
+     * including the user and checks for messages not read by the user.
+     *
+     * @return int The number of unread messages.
+     */
+    public function unreadCount(): int
     {
         return \Jeddsaliba\FilamentMessages\Models\Inbox::whereJsonContains('user_ids', Auth::id())
             ->whereHas('messages', function ($query) {
@@ -41,6 +57,14 @@ class Inbox extends Component implements HasActions, HasForms
             })->get()->count();
     }
 
+    /**
+     * Load the conversations for the current user.
+     *
+     * This method is called when the poll interval is reached,
+     * and is used to refresh the conversations list.
+     *
+     * @return void
+     */
     #[On('refresh-inbox')]
     public function loadConversations(): void
     {
@@ -48,6 +72,20 @@ class Inbox extends Component implements HasActions, HasForms
         $this->markAsRead();
     }
 
+    /**
+     * Define the action for creating a new conversation.
+     *
+     * This action is shown in the inbox page, and is used to create a new conversation.
+     *
+     * The form contains a select box to select the users to send the message to,
+     * a text input to enter the group name (visible only if multiple users are selected),
+     * a textarea to enter the message, and a submit button to send the message.
+     *
+     * When the form is submitted, the action creates a new conversation (if it doesn't exist already),
+     * and adds a new message to the conversation.
+     *
+     * @return \Filament\Actions\Action
+     */
     public function createConversationAction(): Action
     {
         return Action::make('createConversation')
@@ -104,6 +142,15 @@ class Inbox extends Component implements HasActions, HasForms
             ]);
     }
 
+    /**
+     * Render the inbox view for the Livewire component.
+     *
+     * This method returns the view responsible for displaying
+     * the inbox interface, which includes the list of conversations
+     * and controls for interacting with them.
+     *
+     * @return Application|Factory|View|\Illuminate\View\View
+     */
     public function render(): Application | Factory | View | \Illuminate\View\View
     {
         return view('filament-messages::livewire.messages.inbox');

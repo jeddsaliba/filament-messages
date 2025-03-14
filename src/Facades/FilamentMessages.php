@@ -9,7 +9,12 @@ use Illuminate\Support\Facades\Facade;
  */
 class FilamentMessages extends Facade
 {
-    protected static function getFacadeAccessor()
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor(): string
     {
         return \Jeddsaliba\FilamentMessages\FilamentMessages::class;
     }

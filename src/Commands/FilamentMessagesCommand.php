@@ -11,6 +11,11 @@ class FilamentMessagesCommand extends Command
 
     public $description = 'Install the Filament Messages plugin';
 
+    /**
+     * Handle the command.
+     *
+     * @return int
+     */
     public function handle(): int
     {
         $this->info('Starting Filament Messages installation...');
@@ -21,7 +26,12 @@ class FilamentMessagesCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function publishAssets()
+    /**
+     * Publishes the assets, such as migrations and config files.
+     * 
+     * @return void
+     */
+    protected function publishAssets(): void
     {
         $this->info('Publishing assets...');
 
@@ -40,7 +50,15 @@ class FilamentMessagesCommand extends Command
         $this->info('Assets published.');
     }
 
-    protected function runMigrations()
+    /**
+     * Run the migrations for the package.
+     * 
+     * This runs the normal `migrate` Artisan command, which will run all
+     * pending migrations for the package.
+     * 
+     * @return void
+     */
+    protected function runMigrations(): void
     {
         $this->info('Running migrations...');
         Artisan::call('migrate');

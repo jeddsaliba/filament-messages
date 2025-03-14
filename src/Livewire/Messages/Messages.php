@@ -7,6 +7,9 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +36,16 @@ class Messages extends Component implements HasForms
 
     public bool $showUpload = false;
 
+    /**
+     * Initialize the Messages component.
+     *
+     * This method is called when the component is mounted.
+     * It sets the polling interval, fills the form state, and 
+     * if a conversation is selected, initializes the conversation
+     * messages, loads existing messages, and marks them as read.
+     * 
+     * @return void
+     */
     public function mount(): void
     {
         $this->setPollInterval();
@@ -45,9 +58,16 @@ class Messages extends Component implements HasForms
     }
 
     /**
-     * 
+     * Poll for new messages in the selected conversation.
+     *
+     * This method retrieves messages that are newer than the
+     * latest message currently loaded in the conversation.
+     * If new messages are found, they are prepended to the
+     * existing collection of conversation messages.
+     *
+     * @return void
      */
-    public function pollMessages()
+    public function pollMessages(): void
     {
         $latestId = $this->conversationMessages->pluck('id')->first();
         $polledMessages = $this->selectedConversation->messages()->where('id', '>', $latestId)->latest()->get();
@@ -59,12 +79,38 @@ class Messages extends Component implements HasForms
         }
     }
 
-    public function loadMessages()
+    /**
+     * Load the next page of messages for the selected conversation.
+     *
+     * This method appends the messages from the next page to the
+     * existing collection of conversation messages and increments
+     * the current page number.
+     *
+     * @return void
+     */
+    public function loadMessages(): void
     {
         $this->conversationMessages->push(...$this->paginator->getCollection());
         $this->currentPage = $this->currentPage + 1;
     }
 
+    /**
+     * Customize the form schema for the Messages component.
+     *
+     * This method defines the form schema used by the Messages component,
+     * which includes support for file uploads and a message textarea.
+     * The form state is stored in the 'data' property.
+     *
+     * - The 'attachments' field allows multiple file uploads and is
+     *   conditionally visible based on the 'showUpload' property.
+     * - The 'show_hide_upload' action toggles the visibility of the
+     *   attachments upload field.
+     * - The 'message' field is a textarea that supports live updates
+     *   and automatically adjusts its height based on the content.
+     *
+     * @param \Filament\Forms\Form $form The form instance.
+     * @return \Filament\Forms\Form The customized form instance.
+     */
     public function form(Form $form): Form
     {
         return $form
@@ -98,6 +144,19 @@ class Messages extends Component implements HasForms
             ])->statePath('data');
     }
 
+    /**
+     * Sends a message with attachments in the selected conversation.
+     *
+     * This method retrieves the form state, including message content and attachments,
+     * and saves the message to the database within a transaction. The message is then
+     * prepended to the conversation messages collection. Attachments are processed and
+     * added to the media collection. The form is reset, the conversation's updated
+     * timestamp is refreshed, and the inbox is refreshed. If an exception occurs, a
+     * notification is sent to inform the user of the error.
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function sendMessage(): void
     {
         $data = $this->form->getState();
@@ -138,17 +197,39 @@ class Messages extends Component implements HasForms
         }
     }
 
+    /**
+     * Computes the paginator for the conversation messages.
+     *
+     * This method retrieves the latest messages for the selected conversation 
+     * and paginates them by 10 messages per page. The pagination starts at
+     * the current page index.
+     *
+     * @return \Illuminate\Contracts\Pagination\Paginator The paginator instance 
+     * for the conversation messages.
+     */
     #[Computed()]
-    public function paginator()
+    public function paginator(): \Illuminate\Contracts\Pagination\Paginator
     {
         return $this->selectedConversation->messages()->latest()->paginate(10, ['*'], 'page', $this->currentPage);
     }
 
+    /**
+     * Download an attachment from the given file path and return it as a response.
+     *
+     * @param string $filePath The file path of the attachment to download.
+     * @param string $fileName The file name to send with the attachment.
+     * @return \Illuminate\Http\Response The response containing the attachment.
+     */
     public function downloadAttachment(string $filePath, string $fileName)
     {
         return response()->download($filePath, $fileName);
     }
 
+    /**
+     * Determines if the message input is valid.
+     *
+     * @return bool
+     */
     public function validateMessage(): bool
     {
         $rawData = $this->form->getRawState();
@@ -158,7 +239,16 @@ class Messages extends Component implements HasForms
         return false;
     }
 
-    public function render()
+    /**
+     * Render the messages view for the Livewire component.
+     *
+     * This method returns the view responsible for displaying
+     * the messages interface, which includes the chat box and
+     * input area for sending messages.
+     *
+     * @return Application|Factory|View|\Illuminate\View\View
+     */
+    public function render(): Application | Factory | View | \Illuminate\View\View
     {
         return view('filament-messages::livewire.messages.messages');
     }

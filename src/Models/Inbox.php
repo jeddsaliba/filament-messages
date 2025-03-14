@@ -36,6 +36,13 @@ class Inbox extends Model
         ];
     }
 
+    /**
+     * Accessor for the title of the inbox. If the inbox is created by
+     * a user, the title will be the name of the user. If the inbox is created
+     * by a system, the title should be set while creating the inbox.
+     *
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     */
     protected function inboxTitle(): Attribute
     {
         return Attribute::make(
@@ -45,16 +52,35 @@ class Inbox extends Model
         );
     }
 
+    /**
+     * Retrieves an attribute representing all messages associated with the inbox.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\Jeddsaliba\FilamentMessages\Models\Message>
+     */
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
     }
 
-    public function latestMessage()
+    /**
+     * Retrieves the latest message in the inbox.
+     *
+     * This method fetches the most recent message associated with the inbox by
+     * ordering the messages in descending order of creation.
+     *
+     * @return \Jeddsaliba\FilamentMessages\Models\Message|null
+     */
+    public function latestMessage(): Message | null
     {
         return $this->messages()->latest()->first();
     }
 
+    /**
+     * Retrieves an attribute representing all users associated with the inbox,
+     * excluding the current authenticated user.
+     *
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     */
     public function otherUsers(): Attribute
     {
         return Attribute::make(
